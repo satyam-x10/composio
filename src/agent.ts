@@ -467,16 +467,23 @@ async function executeEndpoint(
       // We'll still classify as error, but this is an informed decision
     }
 
-    // Step 7: Populate dependency cache if this is a list-type endpoint
-    if (status === "valid" && endpoint.method === "GET" && pathParams.length === 0) {
+    // Step 7: Populate dependency cache if we got valid results/IDs
+    if (status === "valid") {
       const ids = extractIdsFromResponse(responseData);
+      // Also check if the response data ITSELF is an object with an ID (common for creations)
+      if (ids.length === 0 && responseData && typeof responseData === "object" && "id" in (responseData as any)) {
+        ids.push(String((responseData as any).id));
+      }
+
       if (ids.length > 0) {
         // Determine what param key this feeds into
-        // Look at other endpoints that reference a path under this one
+        // Look at other endpoints that reference a path under this one or matching the resource
         for (const other of allEndpoints) {
           const otherParams = extractPathParams(other.path);
           for (const p of otherParams) {
-            if (other.path.includes(endpoint.path)) {
+            // If it's a GET list endpoint's child, or if the current endpoint is a creation endpoint for that resource
+            const baseTypeMatch = endpoint.path.includes(p.replace("Id", ""));
+            if (other.path.includes(endpoint.path) || baseTypeMatch) {
               cache.populate(p, ids);
             }
           }
