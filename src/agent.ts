@@ -351,8 +351,7 @@ async function executeEndpoint(
   // Normalize path: some proxies (like googlecalendar) already have a base path
   // (e.g. /calendar/v3). If the endpoint path starts with it, strip it to avoid duplication.
   let targetPath = endpoint.path;
-  if (endpoint.path.startsWith("/calendar/v3/") && connectedAccountId.includes("ca_")) {
-    // We only strip if we resolved to a specific account, as the proxy handles the base path
+  if (endpoint.path.startsWith("/calendar/v3/")) {
     targetPath = endpoint.path.replace("/calendar/v3/", "/");
   }
   
